@@ -1,18 +1,16 @@
 from client import get_client
 from order import place_order
-from config import SYMBOL
 
-def main():
-    symbol = SYMBOL
-    side = "Buy"
-    leverage = 10
-    margin = 100
-    tp1 = 110000
-    sl = 100000
-    new_sl = 108000
+client = get_client()
 
-    client = get_client()
-    place_order(client, symbol, side, leverage, margin, tp1, sl, new_sl)
+symbol = "BTCUSDT"
+side = "Buy"
+leverage = 10
+margin_usd = 100
 
-if __name__ == "__main__":
-    main()
+tp_prices = [110000, 112000, 115000]
+tp_percents = [0.6, 0.3, 0.1]
+sl_price = 99000
+
+place_order(client, symbol, side, leverage, margin_usd, tp_prices, tp_percents, sl_price)
+

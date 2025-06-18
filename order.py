@@ -3,7 +3,7 @@ from utils import round_to_step
 
 def place_order(client, symbol, side, leverage, margin_usd, tp_prices, tp_percents, sl_price):
     instrument = get_instrument_info(client, symbol)
-    print(instrument)
+    print(f"\nInstruments: \n\n {instrument}\n")
     tick = float(instrument["priceFilter"]["tickSize"])
     step = float(instrument["lotSizeFilter"]["qtyStep"])
     min_qty = float(instrument["lotSizeFilter"]["minOrderQty"])
@@ -33,13 +33,14 @@ def place_order(client, symbol, side, leverage, margin_usd, tp_prices, tp_percen
     if response["retCode"] != 0:
         raise Exception(f"Open order failed: {response['retMsg']}")
 
-    print("Main order placed.")
+    print(f"Main order placed: \n\n {response} \n")
+
 
     # Выставляем 3 TP лимитками
     for price, percent in zip(tp_prices, tp_percents):
         tp_qty = round_to_step(qty * percent, step)
         price = round_to_step(price, tick)
-        print(f"TP: {tp_qty} @ {price}")
+        print(f"TP: {tp_qty} @ {price}\n")
         r = client.place_order(
             category="linear",
             symbol=symbol,
@@ -52,5 +53,5 @@ def place_order(client, symbol, side, leverage, margin_usd, tp_prices, tp_percen
         )
         if r["retCode"] != 0:
             raise Exception(f"TP order failed: {r['retMsg']}")
-    print("All TPs placed.")
+    print("All TPs placed.\n\n")
 

@@ -21,7 +21,7 @@ def place_order(client, symbol, side, leverage, margin_usd, tp_prices, tp_percen
     response = client.place_order(
         category="linear",
         symbol=symbol,
-        side=side.capitalize(),
+        side="Sell" if side == "Short" else "Buy",
         orderType="Market",
         qty=str(qty),
         timeInForce="IOC",
@@ -35,8 +35,7 @@ def place_order(client, symbol, side, leverage, margin_usd, tp_prices, tp_percen
 
     print(f"Main order placed: \n\n {response} \n")
 
-
-    # Выставляем 3 TP лимитками
+    # Limits
     for price, percent in zip(tp_prices, tp_percents):
         tp_qty = round_to_step(qty * percent, step)
         price = round_to_step(price, tick)
@@ -44,7 +43,7 @@ def place_order(client, symbol, side, leverage, margin_usd, tp_prices, tp_percen
         r = client.place_order(
             category="linear",
             symbol=symbol,
-            side="Sell" if side == "Buy" else "Buy",
+            side="Sell" if side == "Long" else "Buy",
             orderType="Limit",
             qty=str(tp_qty),
             price=str(price),

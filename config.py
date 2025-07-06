@@ -1,8 +1,8 @@
 API_KEY = "j1rvhLMF5mMMAIP8dH"
 API_SECRET = "ObuLEljYO3mMd4FgmeFiIpc65xZix7X0lRK4"
 
-BINANCE_API_KEY = "Swly5fLXWsN5UglbYNfhjnI1mmdGIiyXwm2a5abSKfJ99wW1eirl42c3AdcfyHpA"
-BINANCE_API_SECRET = "C3NPYZyFiYzVuQQnvMCwZGJrWcRUgxtsOksYvdPkrpaMRCjjKqXCFWQb9Ff82z2b"
+BINANCE_API_KEY = "5f2ff6781e45f84ce1d8ffd3d9a495468bf920df40de2e99596f4151a862451c"
+BINANCE_API_SECRET = "6f1b9b37e1dd915c124740147487cc9f1c40c4fa41efa7af84e6f7cc9c5205fe"
 
 from clients.bybit import BybitClient
 from clients.binance import BinanceClient

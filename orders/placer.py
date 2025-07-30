@@ -1,5 +1,5 @@
 from market import get_instrument_info, get_current_price
-from utils import round_to_step
+from utils.helpers import round_to_step
 
 def place_order(client, symbol, side, leverage, margin_usd, tp_prices, tp_percents, sl_price):
     """

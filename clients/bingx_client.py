@@ -1,120 +1,180 @@
-from bingX import BingX
-from config import BINGX_API_KEY, BINGX_API_SECRET
-from utils.helpers import round_to_step
 from clients.base import ExchangeClient
-from enum import Enum
-
-
-class PositionSide(Enum):
-    LONG = "LONG"
-    SHORT = "SHORT"
-
+from utils.helpers import round_to_step
+from config import BINGX_API_KEY, BINGX_API_SECRET
+from urllib.parse import urlencode, quote
+import requests
+import time
+import hmac
+import hashlib
+import json
 
 class BingXClient(ExchangeClient):
-    def __init__(self):
-        self.api = BingX(api_key=BINGX_API_KEY, secret_key=BINGX_API_SECRET)
-        self.perp = self.api.perpetual_v2
-        self.symbol_map = self._load_symbols()
+    def __init__(self, demo: bool = False):
+        self.api_key = BINGX_API_KEY
+        self.api_secret = BINGX_API_SECRET
+        self.demo = demo
+        self.BASE_URL = "https://open-api-vst.bingx.com" if self.demo else "https://open-api.bingx.com"
 
-    def _load_symbols(self) -> dict:
-        contracts = self.perp.market.get_contract_info()
-        return {item["symbol"]: item for item in contracts}
+    def _sign(self, params):
+        sorted_params = dict(sorted(params.items()))
+        query_string = urlencode(sorted_params, quote_via=quote)
+        return hmac.new(self.api_secret.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
 
-    def normalize_symbol(self, symbol: str) -> str:
-        symbol = symbol.upper().replace("--", "-")
-        if symbol in self.symbol_map:
-            return symbol
-        if symbol.endswith("USDT") and symbol.replace("USDT", "-USDT") in self.symbol_map:
-            return symbol.replace("USDT", "-USDT")
-        if symbol.endswith("USDC") and symbol.replace("USDC", "-USDC") in self.symbol_map:
-            return symbol.replace("USDC", "-USDC")
-        raise ValueError(f"⛔ Символ {symbol} не найден на BingX Perpetual")
+    def _request(self, method, path, body_params=None, query_params=None):
+        if query_params is None:
+            query_params = {}
+        if body_params is None:
+            body_params = {}
 
-    def get_price(self, symbol: str) -> float:
-        sym = self.normalize_symbol(symbol)
-        res = self.perp.market.get_ticker(sym)
-        return float(res["lastPrice"])
+        query_params["timestamp"] = str(int(time.time() * 1000))
+        query_params.setdefault("recvWindow", "5000")
 
-    def get_instrument_info(self, symbol: str) -> dict:
-        sym = self.normalize_symbol(symbol)
-        info = self.symbol_map[sym]
+        all_params = {**query_params, **body_params}
+        signature = self._sign(all_params)
+        query_params["signature"] = signature
 
-        tick_size = float(f"1e-{info.get('pricePrecision', 2)}")
-        step_size = float(f"1e-{info.get('quantityPrecision', 4)}")
-
-        missing_fields = []
-        min_qty = info.get("minQty")
-        max_qty = info.get("maxQty")
-
-        if min_qty is None:
-            missing_fields.append("minQty")
-        if max_qty is None:
-            missing_fields.append("maxQty")
-
-        if missing_fields:
-            print(f"⚠️ Биржа не вернула следующие параметры для {sym}: {', '.join(missing_fields)}")
-            confirm = input("❓ Использовать резервные значения? (0.001 / 1000) [y/N]: ").strip().lower()
-            if confirm != "y":
-                raise ValueError("⛔ Операция отменена пользователем.")
-            min_qty = 0.001
-            max_qty = 1000
-            print(f"✅ Используем minQty={min_qty}, maxQty={max_qty}")
-
-        return {
-            "tickSize": tick_size,
-            "stepSize": step_size,
-            "minQty": float(min_qty),
-            "maxQty": float(max_qty),
+        url = f"{self.BASE_URL}{path}?{urlencode(query_params, quote_via=quote)}"
+        headers = {
+            "X-BX-APIKEY": self.api_key,
+            "Content-Type": "application/json"
         }
 
+        if method.upper() == "POST":
+            response = requests.post(url, headers=headers, json=body_params)
+        else:
+            response = requests.get(url, headers=headers)
+
+        data = response.json()
+        if data.get("code") != 0:
+            raise Exception(f"BingX API error: {data}")
+        return data
+
+    def set_leverage(self, symbol, leverage, position_side):
+        """Set leverage for a symbol and position side."""
+        path = "/openApi/swap/v2/trade/leverage"
+        body_params = {
+            "symbol": symbol,
+            "side": position_side.upper(),  # LONG or SHORT
+            "leverage": str(int(leverage))
+        }
+        return self._request("POST", path, body_params=body_params)
+
+    def get_instrument_info(self, symbol):
+        """Fetch symbol information (tick size, quantity step, etc.)."""
+        path = "/openApi/swap/v2/quote/contracts"
+        query_params = {"symbol": symbol}
+        response = self._request("GET", path, query_params=query_params)
+        data = response["data"][0]  # Assuming single symbol response
+        return {
+            "priceFilter": {"tickSize": str(data["tickSize"])},
+            "lotSizeFilter": {
+                "qtyStep": str(data["quantityStep"]),
+                "minOrderQty": str(data["minQuantity"]),
+                "maxOrderQty": str(data["maxQuantity"])
+            }
+        }
+
+    def get_price(self, symbol):
+        """Fetch current market price."""
+        path = "/openApi/swap/v2/quote/price"
+        query_params = {"symbol": symbol}
+        response = self._request("GET", path, query_params=query_params)
+        return float(response["data"]["price"])
+
     def place_order(self, symbol, side, leverage, margin_usd, tp_prices, tp_percents, sl_price):
-        sym = self.normalize_symbol(symbol)
-        print(f"‼️ Normalized symbol: {sym}")
+        """
+        Place a market order with stop-loss and multiple take-profit limit orders.
 
-        info = self.get_instrument_info(sym)
-        tick = info["tickSize"]
-        step = info["stepSize"]
+        Args:
+            symbol: Trading pair (e.g., "BTC-USDT")
+            side: "Buy" or "Sell"
+            leverage: Leverage multiplier
+            margin_usd: Margin amount in USD
+            tp_prices: List of take-profit prices
+            tp_percents: List of take-profit percentages (must sum to 1.0)
+            sl_price: Stop-loss price
+        """
+        # Validate inputs
+        if len(tp_prices) != len(tp_percents):
+            raise ValueError("tp_prices and tp_percents must match")
+        if abs(sum(tp_percents) - 1.0) > 0.01:
+            raise ValueError("TP percentages must sum to 1.0")
 
-        price = self.get_price(sym)
-        qty = round_to_step((margin_usd * leverage) / price, step)
+        # Get instrument info for precision
+        instrument = self.get_instrument_info(symbol)
+        tick = float(instrument["priceFilter"]["tickSize"])
+        step = float(instrument["lotSizeFilter"]["qtyStep"])
+        min_qty = float(instrument["lotSizeFilter"]["minOrderQty"])
+        max_qty = float(instrument["lotSizeFilter"]["maxOrderQty"])
 
-        position_side = PositionSide.LONG if side.lower() == "buy" else PositionSide.SHORT
-        self.perp.trade.change_leverage(
-            symbol=sym,
-            leverage=str(leverage),
-            position_side=position_side
+        # Calculate order quantity
+        current_price = self.get_price(symbol)
+        qty = round_to_step((margin_usd * leverage) / current_price, step)
+        if qty < min_qty or qty > max_qty:
+            raise ValueError(f"Qty {qty} is out of bounds [{min_qty}, {max_qty}]")
+
+        sl_price = round_to_step(sl_price, tick)
+        position_side = "LONG" if side.lower() == "buy" else "SHORT"
+        market_side = "BUY" if side.lower() == "buy" else "SELL"
+
+        # Set leverage
+        self.set_leverage(symbol, leverage, position_side)
+
+        # Place main market order with stop-loss
+        main_order = self._request(
+            method="POST",
+            path="/openApi/swap/v2/trade/order",
+            body_params={
+                "symbol": symbol,
+                "side": market_side,
+                "positionSide": position_side,
+                "type": "MARKET",
+                "quantity": str(qty),
+                "stopLoss": json.dumps({
+                    "type": "STOP_MARKET",
+                    "stopPrice": float(sl_price),
+                    "workingType": "MARK_PRICE"
+                })
+            }
         )
 
-        self.perp.trade.create_order(
-            symbol=sym,
-            side="BUY" if side.lower() == "buy" else "SELL",
-            type="MARKET",
-            quantity=str(qty),
-            stopLoss=str(round_to_step(sl_price, tick))
-        )
+        print(f"\n✅ Market order placed. Qty: {qty} | SL: {sl_price}\n")
 
-        if res_main.get("code") != 0:
-            raise Exception("Main order failed: " + res_main.get("msg", ""))
-        print(f"✅ Main market order placed: {qty} @ SL {round_to_step(sl_price, tick)}")
-
+        # Place TP limit orders (reduce-only)
+        tp_orders = []
+        tp_side = "SELL" if side.lower() == "buy" else "BUY"
         for i, (tp_price, percent) in enumerate(zip(tp_prices, tp_percents), start=1):
             tp_qty = round_to_step(qty * percent, step)
-            tp_pr = round_to_step(tp_price, tick)
-            close_side = "SELL" if side.lower() == "buy" else "BUY"
-            res_tp = self.perp.trade.create_order(Order(
-                symbol=sym,
-                side=close_side,
-                type="LIMIT",
-                price=str(tp_pr),
-                quantity=str(tp_qty),
-                reduceOnly=True,
-                timeInForce="GTC"
-            ))
-            if res_tp.get("code") != 0:
-                print(f"⚠️ TP{i} failed:", res_tp.get("msg", ""))
-            else:
-                print(f"→ TP{i} placed: {tp_qty}@{tp_pr}")
+            tp_price = round_to_step(tp_price, tick)
 
-        print("🎯 All TP orders placed.")
-        return {"main": res_main, "tp_count": len(tp_prices)}
+            # Skip TP if it would trigger immediately
+            price_triggered = (
+                (tp_side == "SELL" and tp_price <= current_price) or
+                (tp_side == "BUY" and tp_price >= current_price)
+            )
+            if price_triggered:
+                print(f"⚠️  TP{i} @ {tp_price} would trigger immediately — skipping.")
+                continue
 
+            print(f"→ TP{i}: {tp_qty} @ {tp_price} ({int(percent * 100)}%)")
+            tp_order = self._request(
+                method="POST",
+                path="/openApi/swap/v2/trade/order",
+                body_params={
+                    "symbol": symbol,
+                    "side": tp_side,
+                    "positionSide": position_side,
+                    "type": "LIMIT",
+                    "quantity": str(tp_qty),
+                    "price": str(tp_price),
+                    "reduceOnly": True
+                }
+            )
+            tp_orders.append(tp_order)
+
+        print("✅ All valid TP orders placed.\n")
+
+        return {
+            "market_order": main_order,
+            "tp_orders": len(tp_orders)
+        }

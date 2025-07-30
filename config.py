@@ -9,8 +9,8 @@ BYBIT_API_SECRET = os.getenv("BYBIT_API_SECRET")
 BINANCE_API_KEY = os.getenv("BINANCE_API_KEY")
 BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET")
 
-BINGX_API_KEY = os.getenv("BINANCE_API_KEY")
-BINGX_API_SECRET = os.getenv("BINANCE_API_SECRET")
+BINGX_API_KEY = os.getenv("BINGX_API_KEY")
+BINGX_API_SECRET = os.getenv("BINGX_API_SECRET")
 
 from clients.bybit_client import BybitClient
 from clients.binance_client import BinanceClient 

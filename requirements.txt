@@ -1,0 +1,6 @@
+python-binance
+pybit
+cryptography
+aiohttp
+python-dotenv
+

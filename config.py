@@ -6,14 +6,12 @@ BINANCE_API_SECRET = "6f1b9b37e1dd915c124740147487cc9f1c40c4fa41efa7af84e6f7cc9c
 
 from clients.bybit import BybitClient
 from clients.binance import BinanceClient
-from clients.mexc import MEXCClient
 from clients.bingx import BingXClient
 
 
 client_map = {
     "bybit": BybitClient,
     "binance": BinanceClient,
-    "mexc": MEXCClient,
     "bingx": BingXClient
 }
 

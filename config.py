@@ -4,16 +4,16 @@ API_SECRET = "ObuLEljYO3mMd4FgmeFiIpc65xZix7X0lRK4"
 BINANCE_API_KEY = "5f2ff6781e45f84ce1d8ffd3d9a495468bf920df40de2e99596f4151a862451c"
 BINANCE_API_SECRET = "6f1b9b37e1dd915c124740147487cc9f1c40c4fa41efa7af84e6f7cc9c5205fe"
 
+BINGX_API_KEY = "8KS9Za5jJyePDWhKSgKX5B5C1euyQhLWvzFhOrt6UXYIlw7ovmPqCpU9z6KmVOesnNE5vIQoz9Jxr8hHSgvn0g"
+BINGX_API_SECRET = "Hb7f3P0FcXxpaOykxvjL71djhrtk6kwGJaXlWW7irYYML3xjllsIgCHNnxdiPaKlYYGdwY0LA12AQQCxjw"
+
 from clients.bybit import BybitClient
 from clients.binance import BinanceClient
-from clients.mexc import MEXCClient
 from clients.bingx import BingXClient
-
 
 client_map = {
     "bybit": BybitClient,
     "binance": BinanceClient,
-    "mexc": MEXCClient,
     "bingx": BingXClient
 }
 
@@ -51,8 +51,7 @@ tp_presets = [
     {
         "name": "Импульс (80/15/5)",
         "take_percents": [0.8, 0.15, 0.05],
-        "platform_levels": [0.8, 0.75, 1.0]
-    },
+        "platform_levels": [0.8, 0.75, 1.0] },
     {
         "name": "Гибрид (50/25/15/10)",
         "take_percents": [0.5, 0.25, 0.15, 0.1],

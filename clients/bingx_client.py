@@ -1,6 +1,6 @@
 from bingX import BingX
 from config import BINGX_API_KEY, BINGX_API_SECRET
-from utils import round_to_step
+from utils.helpers import round_to_step
 from clients.base import ExchangeClient
 from enum import Enum
 

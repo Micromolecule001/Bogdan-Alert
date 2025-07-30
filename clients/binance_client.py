@@ -2,7 +2,7 @@ from clients.base import ExchangeClient
 from config import BINANCE_API_KEY, BINANCE_API_SECRET
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
-from utils import round_to_step
+from utils.helpers import round_to_step
 
 class BinanceClient(ExchangeClient):
     def __init__(self):

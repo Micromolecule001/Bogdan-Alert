@@ -9,17 +9,17 @@ BYBIT_API_SECRET = os.getenv("BYBIT_API_SECRET")
 BINANCE_API_KEY = os.getenv("BINANCE_API_KEY")
 BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET")
 
-BINGX_API_KEY = "8KS9Za5jJyePDWhKSgKX5B5C1euyQhLWvzFhOrt6UXYIlw7ovmPqCpU9z6KmVOesnNE5vIQoz9Jxr8hHSgvn0g"
-BINGX_API_SECRET = "Hb7f3P0FcXxpaOykxvjL71djhrtk6kwGJaXlWW7irYYML3xjllsIgCHNnxdiPaKlYYGdwY0LA12AQQCxjw"
+BINGX_API_KEY = os.getenv("BINANCE_API_KEY")
+BINGX_API_SECRET = os.getenv("BINANCE_API_SECRET")
 
-from clients.bybit import BybitClient
-from clients.binance import BinanceClient
-from clients.bingx import BingXClient
+from clients.bybit_client import BybitClient
+from clients.binance_client import BinanceClient 
+from clients.bingx_client import BingXClient
 
 client_map = {
     "bybit": BybitClient,
     "binance": BinanceClient,
-    "bingx": BingXClient
+    "bingx": BingXClient 
 }
 
 tp_presets = [

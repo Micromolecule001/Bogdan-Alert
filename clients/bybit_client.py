@@ -1,14 +1,14 @@
 from clients.base import ExchangeClient
 from pybit.unified_trading import HTTP
-from config import API_KEY, API_SECRET  # ✅ правильный импорт
-from utils import round_to_step
+from config import BYBIT_API_KEY, BYBIT_API_SECRET  # ✅ правильный импорт
+from utils.helpers import round_to_step
 
 class BybitClient(ExchangeClient):
     def __init__(self):
         self.client = HTTP(
             testnet=False,
-            api_key=API_KEY,
-            api_secret=API_SECRET,
+            api_key=BYBIT_API_KEY,
+            api_secret=BYBIT_API_SECRET,
             demo=True
         )
 

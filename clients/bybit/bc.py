@@ -87,3 +87,4 @@ class BybitClient(ExchangeClient):
             "market_order": main_order,
             "tp_orders": len(tp_prices)
         }
+

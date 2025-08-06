@@ -12,9 +12,9 @@ BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET")
 BINGX_API_KEY = os.getenv("BINGX_API_KEY")
 BINGX_API_SECRET = os.getenv("BINGX_API_SECRET")
 
-from clients.bybit_client import BybitClient
-from clients.binance_client import BinanceClient 
-from clients.bingx_client import BingXClient
+from clients.bybit.client import BybitClient
+from clients.binance.client import BinanceClient 
+from clients.bingx.client import BingXClient
 
 client_map = {
     "bybit": BybitClient,

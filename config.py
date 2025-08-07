@@ -14,12 +14,12 @@ BINGX_API_SECRET = os.getenv("BINGX_API_SECRET")
 
 from clients.bybit.client import BybitClient
 from clients.binance.client import BinanceClient 
-from clients.bingx.client import BingXClient
+from clients.bingx.client import BingxClient
 
 client_map = {
     "bybit": BybitClient,
     "binance": BinanceClient,
-    "bingx": BingXClient 
+    "bingx": BingxClient 
 }
 
 tp_presets = [

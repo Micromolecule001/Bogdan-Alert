@@ -4,7 +4,7 @@ import hashlib
 from urllib.parse import urlencode
 from config import BINGX_API_KEY, BINGX_API_SECRET
 
-__all__ = ["get_timestamp_ms", "sign_params", "build_auth_params", "round_to_step"]
+BASE = "https://open-api.bingx.com"
 
 def get_timestamp_ms() -> int:
     return int(time.time() * 1000)
@@ -23,3 +23,4 @@ def build_auth_params(params: dict) -> dict:
 
 def round_to_step(value, step):
     return round(round(value / step) * step, 8)
+

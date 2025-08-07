@@ -1,9 +1,7 @@
 import requests
-from config import BINGX_API_KEY, BINGX_SOURCE_KEY
 from .utils import BASE, build_auth_params, round_to_step
 from .info import get_price, get_instrument_info
-
-__all__ = ["place_order"]
+from config import BINGX_API_KEY
 
 def place_order(symbol, side, leverage, margin_usd, tp_prices, tp_percents, sl_price):
     instrument = get_instrument_info(symbol)
@@ -30,8 +28,6 @@ def place_order(symbol, side, leverage, margin_usd, tp_prices, tp_percents, sl_p
 
     params = build_auth_params(payload.copy())
     headers = {'X-BX-APIKEY': BINGX_API_KEY}
-    if BINGX_SOURCE_KEY:
-        headers['X-SOURCE-KEY'] = BINGX_SOURCE_KEY
 
     response = requests.post(BASE + path, params=params, headers=headers)
     result = response.json()

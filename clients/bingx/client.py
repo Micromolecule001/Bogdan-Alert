@@ -11,4 +11,3 @@ class BingxClient(ExchangeClient):
 
     def place_order(self, symbol, side, leverage, margin_usd, tp_prices, tp_percents, sl_price):
         return place_order(symbol, side, leverage, margin_usd, tp_prices, tp_percents, sl_price)
-

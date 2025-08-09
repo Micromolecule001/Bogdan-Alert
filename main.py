@@ -16,15 +16,26 @@ def main():
         print(f"{i}. {name.capitalize()}")
 
     try:
-        choice = int(input("Введите номер биржи: "))
         exchange_names = list(client_map.keys())
+        raw_input = input("Введите номер биржи: ")
+        choice = int(raw_input)
+        if choice < 1 or choice > len(exchange_names):
+            print(f"DEBUG: Invalid choice: {choice} (out of range)")
+            raise IndexError("Choice out of range")
+        
         selected_exchange = exchange_names[choice - 1]
         ClientClass = client_map[selected_exchange]
         client = ClientClass()
         print(f"\n✅ Биржа выбрана: {selected_exchange}")
-    except (ValueError, IndexError):
-        print("❌ Неверный выбор биржи.")
-        return
+        
+    except ValueError:
+        print(f"❌ Неверный ввод: введите целое число. Raw input was: '{raw_input}'")
+    except IndexError:
+        print(f"❌ Неверный выбор биржи: выберите число от 1 до {len(exchange_names)}.")
+    except KeyError:
+        print(f"❌ Ошибка: биржа '{selected_exchange}' не найдена в client_map.")
+    except Exception as e:
+        print(f"❌ Неожиданная ошибка: {str(e)}")
 
     # ===== Ввод параметров =====
     symbol = input("Symbol (e.g. BTCUSDT): ").strip().upper()
@@ -40,7 +51,6 @@ def main():
     preset_choice = int(input("\nТвой выбор: ")) - 1
     preset = tp_presets[preset_choice]
     tp_relative = preset["take_percents"]
-    platform_levels = preset.get("platform_levels", [])
 
     tp_percents = convert_relative_to_absolute(tp_relative) if sum(tp_relative) > 1.01 else tp_relative
 

@@ -6,6 +6,19 @@ import json
 
 BASE = "https://open-api.bingx.com"
 
+def map_side_for_bingx(side: str) -> str:
+    """Конвертация BUY/SELL/LONG/SHORT в LONG/SHORT для BingX."""
+    side = side.strip().lower()
+    side_map = {
+        "buy": "LONG",
+        "long": "LONG",
+        "sell": "SHORT",
+        "short": "SHORT"
+    }
+    if side not in side_map:
+        raise ValueError(f"Invalid side '{side}' — use buy/sell or long/short")
+    return side_map[side]
+
 def build_auth_params(payload: dict, api_secret: str) -> dict:
     """
     Build authenticated parameters for BingX API requests.

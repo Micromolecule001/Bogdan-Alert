@@ -1,3 +1,5 @@
+# This file contains methods that can give me any info from api
+
 def get_price(client, symbol: str) -> float:
     response = client.get_tickers(category="linear", symbol=symbol)
     return float(response["result"]["list"][0]["lastPrice"])

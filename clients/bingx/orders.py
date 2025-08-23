@@ -1,5 +1,6 @@
 # clients/bingx/orders.py
 
+import json
 from bingx.api import BingxAPI
 from config import BINGX_API_KEY, BINGX_API_SECRET
 from .utils import map_side_for_bingx
@@ -7,7 +8,7 @@ from .utils import map_side_for_bingx
 def place_order(symbol: str, side: str, leverage: int,
                 margin_usd: float, tp_prices: list,
                 tp_percents: list, sl_price: float,
-                price: float = None):
+                price: float):
     """
     Размещает ордер на BingX с несколькими тейк-профитами и стоп-лоссом.
 
@@ -24,14 +25,10 @@ def place_order(symbol: str, side: str, leverage: int,
     client = BingxAPI(BINGX_API_KEY, BINGX_API_SECRET, timestamp="local")
     side = map_side_for_bingx(side)
 
-    # Если цену не передали — получаем её
-    if price is None:
-        from .info import get_price
-        price = get_price(symbol)
-
     qty = margin_usd * leverage / price
 
-    # Проверки
+    # Проверки 
+    print(f'\n Price: \n{price}')
     if abs(sum(tp_percents) - 1) > 1e-6:
         raise ValueError("TP percents must sum to 1.0")
     if len(tp_prices) != len(tp_percents):
@@ -46,7 +43,7 @@ def place_order(symbol: str, side: str, leverage: int,
         sl=str(sl_price)
     )
 
-    print("DEBUG: Market order response:", order_response)
+    print("DEBUG: Market order response:", json.dumps(order_response, indent=2))
 
     # Проверка структуры ответа
     if not isinstance(order_response, dict) or "data" not in order_response:

@@ -1,5 +1,16 @@
 from config import tp_presets, client_map
 
+# auto debug
+auto = False 
+
+autoChoice = 3
+autoSide = 'buy'
+autoSymbol = 'BTC-USDT'
+autoLeverage = 10
+autoMargin = 200
+autoPreset = 10
+
+
 def convert_relative_to_absolute(relatives):
     absolutes = []
     remaining = 1.0
@@ -17,7 +28,7 @@ def main():
 
     try:
         exchange_names = list(client_map.keys())
-        raw_input = input("Введите номер биржи: ")
+        raw_input = autoChoice if auto else input("Введите номер биржи: ")
         choice = int(raw_input)
         if choice < 1 or choice > len(exchange_names):
             print(f"DEBUG: Invalid choice: {choice} (out of range)")
@@ -38,17 +49,17 @@ def main():
         print(f"❌ Неожиданная ошибка: {str(e)}")
 
     # ===== Ввод параметров =====
-    symbol = input("Symbol (e.g. BTCUSDT): ").strip().upper()
-    side = input("Side (Long/Short): ").capitalize()
-    leverage = int(input("Leverage (e.g. 10): "))
-    margin_usd = float(input("Margin USD (e.g. 100): "))
+    symbol = autoSymbol if auto else input("Symbol (e.g. BTCUSDT): ").strip().upper()
+    side = autoSide if auto else input("Side (Long/Short): ").capitalize()
+    leverage = autoLeverage if auto else int(input("Leverage (e.g. 10): "))
+    margin_usd = autoMargin if auto else float(input("Margin USD (e.g. 100): "))
 
     # ===== Выбор TP пресета =====
     print("\nВыбери TP пресет:\n")
     for i, preset in enumerate(tp_presets):
         print(f"{i + 1}. {preset['name']}")
 
-    preset_choice = int(input("\nТвой выбор: ")) - 1
+    preset_choice = autoPreset - 1 if auto else int(input("\nТвой выбор: ")) - 1
     preset = tp_presets[preset_choice]
     tp_relative = preset["take_percents"]
 

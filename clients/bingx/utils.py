@@ -1,4 +1,5 @@
 # .utils.py
+import math
 import time
 import hmac
 import hashlib
@@ -67,14 +68,16 @@ def build_auth_params(payload: dict, api_secret: str) -> dict:
     return payload
 
 def round_to_step(value: float, step: float) -> float:
-    """
-    Round value to the nearest step size.
-    
-    Args:
-        value (float): The value to round.
-        step (float): The step size (e.g., tickSize or lotSizeStep).
-        
-    Returns:
-        float: The rounded value.
-    """
-    return round(value / step) * step
+    if step <= 0:
+        return float(value)
+    return math.floor(float(value) / step + 1e-12) * step
+
+def normalize_symbol(symbol: str) -> str:
+    """BTCUSDT -> BTC-USDT; уже корректный формат оставляем как есть."""
+    s = symbol.strip().upper()
+    if "-" in s:
+        return s
+    if s.endswith("USDT") and len(s) > 5:
+        return f"{s[:-4]}-USDT"
+    return s  # пусть будет так, напечатаем в DEBUG что не уверены
+

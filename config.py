@@ -24,6 +24,11 @@ client_map = {
 
 tp_presets = [
     {
+        "name": "solo (100)",
+        "take_percents": [1.0],
+        "platform_levels": [1.0]
+    },
+    {
         "name": "Баланс (50/30/20)",
         "take_percents": [0.5, 0.3, 0.2],
         "platform_levels": [0.5, 0.6, 1.0]
